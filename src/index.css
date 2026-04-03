@@ -1,0 +1,64 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #c45d2c;
+  color: white;
+}
+
+/* ===== GLOBAL RESPONSIVE ===== */
+@media (max-width: 768px) {
+  /* Splash */
+  .splash-title { font-size: 2.4rem !important; }
+  .splash-name { font-size: 3rem !important; }
+  .splash-text { font-size: 0.95rem !important; }
+  .splash-inner { padding: 0 20px !important; }
+
+  /* Itinerary */
+  .it-title { font-size: 2.2rem !important; }
+  .it-name { font-size: 2.6rem !important; }
+  .it-subtitle { font-size: 1.6rem !important; }
+
+  /* Cooking loader */
+  .lottie-box { width: 220px !important; height: 220px !important; }
+
+  /* Welcome popup */
+  .welcome-card { padding: 28px 24px !important; }
+  .welcome-title { font-size: 1.2rem !important; }
+}
+
+@media (max-width: 480px) {
+  /* Splash */
+  .splash-title { font-size: 2rem !important; }
+  .splash-name { font-size: 2.4rem !important; }
+  .splash-text { font-size: 0.85rem !important; }
+  .splash-btn { padding: 12px 30px !important; font-size: 0.8rem !important; }
+
+  /* Itinerary */
+  .it-title { font-size: 1.8rem !important; }
+  .it-name { font-size: 2.2rem !important; }
+  .it-subtitle { font-size: 1.3rem !important; }
+  .it-item { padding: 14px !important; }
+  .it-item-icon { font-size: 1.2rem !important; }
+
+  /* Cooking loader */
+  .lottie-box { width: 180px !important; height: 180px !important; }
+  .cook-msg { font-size: 1rem !important; }
+  .progress-bar { width: 160px !important; }
+
+  /* Welcome popup */
+  .welcome-card { padding: 24px 18px !important; }
+  .welcome-title { font-size: 1.1rem !important; }
+}
