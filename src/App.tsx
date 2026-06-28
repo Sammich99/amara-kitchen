@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
-import LottieRaw from "lottie-react";
-// Handle CJS/ESM interop — lottie-react may double-wrap its default export
-const Lottie = (typeof (LottieRaw as unknown as { default: unknown }).default === "function"
-  ? (LottieRaw as unknown as { default: typeof LottieRaw }).default
-  : LottieRaw) as typeof LottieRaw;
+import emailjs from "emailjs-com";
+
+// ========== CART TYPES ==========
+type CartItem = { name: string; price: number; qty: number; category: string };
+type OrderStep = "cart" | "form" | "payment" | "done";
 
 // ========== IMAGES (from public/) ==========
 const FOOD_IMAGES = {
-  menuChops: "/images/menu-flyer-chops.jpg",
-  menuPlates: "/images/menu-flyer-plates.jpg",
-  menuSoups: "/images/menu-flyer-soups.jpg",
+  menuChops: "/images/menu1.jpg",
+  menuPlates: "/images/menu2.png",
+  menuSoups: "/images/menu3.png",
   logo: "/images/logo.png",
   review1: "/images/review-1.jpg",
   review2: "/images/review-2.jpg",
@@ -30,9 +30,9 @@ const MENU_DATA = [
   {
     category: "Plates",
     items: [
-      { name: "Jollof Rice", desc: "Classic smoky Nigerian jollof, perfectly seasoned", price: "$20", popular: true },
+      { name: "Jollof Rice", desc: "Classic smoky Nigerian jollof, perfectly seasoned", price: "$25", popular: true },
       { name: "Fried Rice", desc: "Colorful and flavorful, loaded with vegetables", price: "$25" },
-      { name: "Jollof Spaghetti", desc: "A Nigerian twist on pasta, rich and savory", price: "$20" },
+      { name: "Jollof Spaghetti", desc: "A Nigerian twist on pasta, rich and savory", price: "$25" },
       { name: "Stir Fry Pasta", desc: "Wok-tossed pasta with bold seasonings", price: "$25", popular: true },
     ],
   },
@@ -51,18 +51,18 @@ const MENU_DATA = [
   {
     category: "Stew & Sauce",
     items: [
-      { name: "Ayamase", desc: "Spicy designer stew with locust beans", price: "$25", popular: true },
-      { name: "Stew", desc: "Classic tomato stew, rich and vibrant", price: "$22" },
-      { name: "Yam Porridge", desc: "Hearty yam cooked in savory sauce", price: "$20" },
+      { name: "Ayamase", desc: "Spicy designer stew with locust beans", price: "$35", popular: true },
+      { name: "Stew", desc: "Classic tomato stew, rich and vibrant", price: "$30" },
+      { name: "Yam Porridge", desc: "Hearty yam cooked in savory sauce", price: "$30" },
     ],
   },
   {
     category: "Extras",
     items: [
-      { name: "Gizdodo", desc: "Gizzard and fried plantain medley", price: "$15", popular: true },
-      { name: "Asun", desc: "Spicy smoked goat meat, perfectly grilled", price: "$20" },
-      { name: "Moi Moi", desc: "Steamed bean pudding, soft and savory", price: "$12" },
-      { name: "Grilled Fish", desc: "Whole fish, seasoned and flame-grilled", price: "$20" },
+      { name: "Gizdodo", desc: "Gizzard and fried plantain medley", price: "$22", popular: true },
+      { name: "Asun", desc: "Spicy smoked goat meat, perfectly grilled", price: "$30" },
+      { name: "Moi Moi", desc: "Steamed bean pudding, soft and savory", price: "$15" },
+      { name: "Grilled Fish", desc: "Whole fish, seasoned and flame-grilled", price: "$30" },
       { name: "Grilled Pepper Turkey", desc: "Tender turkey with spicy pepper coating", price: "$35" },
     ],
   },
@@ -71,7 +71,6 @@ const MENU_DATA = [
     items: [
       { name: "Meat Pies", desc: "Flaky pastry filled with seasoned meat", price: "$18", popular: true },
       { name: "Puff Puff", desc: "Sweet, fluffy deep-fried dough balls", price: "$15" },
-      { name: "Shawarma", desc: "Loaded with spiced meat and fresh veggies", price: "$25" },
       { name: "Beef Kebabs", desc: "Juicy skewered beef, perfectly spiced", price: "$20" },
       { name: "Egg Roll", desc: "Boiled egg wrapped in dough and fried", price: "$18" },
       { name: "Spring Roll", desc: "Crispy rolls with savory vegetable filling", price: "$15" },
@@ -81,11 +80,11 @@ const MENU_DATA = [
 ];
 
 const BULK_CHOPS = [
-  { name: "Meatpies", price: "$60 / $80" },
-  { name: "Puff Puff", price: "$50 / $70" },
-  { name: "Shawarma", price: "$85 / $105" },
-  { name: "Beef Kebabs", price: "$80 / $100" },
-  { name: "Egg Roll", price: "$60 / $80" },
+  { name: "Meatpies", price: "$65 / $140" },
+  { name: "Puff Puff", price: "$55 / $110" },
+  { name: "Beef Kebabs", price: "$95 / $190" },
+  { name: "Egg Roll", price: "$80 / $150" },
+  { name: "Fish Roll", price: "$65 / $140" },
 ];
 
 // ========== REAL CUSTOMER TESTIMONIALS ==========
@@ -125,35 +124,6 @@ const TESTIMONIALS = [
     text: "The chops were really great. You did great job o. And it was filling. No further food tonight!",
     rating: 5,
     image: FOOD_IMAGES.review5,
-  },
-];
-
-// ========== ITINERARY ==========
-const ITINERARY = [
-  {
-    time: "Morning",
-    title: "Fresh Flowers",
-    desc: "Starting our special day the right way",
-    icon: "\uD83C\uDF3A",
-  },
-  {
-    time: "4:30 PM",
-    title: "A Special Dinner",
-    desc: "Dress nice \u2014 a place we\u2019ve never been",
-    icon: "\uD83C\uDF7D\uFE0F",
-  },
-  {
-   // time: "Evening",
-    title: "A Special Gift",
-    desc: "Something I made just for you\u2026",
-    icon: "\uD83C\uDF81",
-    isGift: true,
-  },
-  {
-    time: "Night",
-    title: "Evening Adventure",
-    desc: "Something fun, just the two of us",
-    icon: "\u2728",
   },
 ];
 
@@ -209,538 +179,81 @@ function Stars({ count }: { count: number }) {
   );
 }
 
-// ========== COOKING ANIMATION ==========
-const LOTTIE_SEQUENCE = [
-  { src: "/animations/preloader.json", duration: 3000, message: "Prepping the ingredients\u2026" },
-  { src: "/animations/cooking-character.json", duration: 4000, message: "Stirring with love\u2026" },
-  { src: "/animations/cooking-kitchen.json", duration: 3000, message: "Almost ready\u2026" },
-];
-
-function CookingLoader({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState(0);
-  const [animData, setAnimData] = useState<Record<string, unknown>[]>([]);
-  const messages = LOTTIE_SEQUENCE.map((s) => s.message);
-
-  const [loaded, setLoaded] = useState(false);
-
-  // Load all lottie JSON files with error handling
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all(
-      LOTTIE_SEQUENCE.map((s) =>
-        fetch(s.src)
-          .then((r) => r.json())
-          .catch(() => null)
-      )
-    ).then((results) => {
-      if (cancelled) return;
-      const valid = results.filter(Boolean);
-      if (valid.length > 0) {
-        setAnimData(valid as Record<string, unknown>[]);
-      }
-      setLoaded(true);
-    });
-    // Failsafe: if loading takes too long, proceed anyway
-    const failsafe = setTimeout(() => {
-      if (!cancelled) setLoaded(true);
-    }, 3000);
-    return () => { cancelled = true; clearTimeout(failsafe); };
-  }, []);
-
-  // Phase transitions: cycle through animations then call onDone
-  useEffect(() => {
-    if (!loaded) return;
-    if (animData.length === 0) {
-      // No lottie loaded — just run through messages on a timer
-      const t1 = setTimeout(() => setPhase(1), 3000);
-      const t2 = setTimeout(() => setPhase(2), 6000);
-      const t3 = setTimeout(() => onDone(), 9000);
-      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-    }
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    let elapsed = 0;
-    for (let i = 1; i < animData.length; i++) {
-      elapsed += LOTTIE_SEQUENCE[i - 1]?.duration ?? 3000;
-      const idx = i;
-      timers.push(setTimeout(() => setPhase(idx), elapsed));
-    }
-    elapsed += LOTTIE_SEQUENCE[animData.length - 1]?.duration ?? 3000;
-    timers.push(setTimeout(() => onDone(), elapsed));
-    return () => timers.forEach(clearTimeout);
-  }, [loaded, animData, onDone]);
-
-  // Total duration for progress bar
-  const totalDuration = animData.length > 0
-    ? LOTTIE_SEQUENCE.slice(0, animData.length).reduce((sum, s) => sum + s.duration, 0)
-    : 9000;
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9998,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        background: "linear-gradient(135deg,#0a0a0a,#1a1a1a 40%,#111 100%)",
-      }}
-    >
-      <style>{`
-        @keyframes cook-fade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes lottie-in { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
-        .cook-msg{animation:cook-fade .6s ease both}
-        .lottie-anim{animation:lottie-in .5s ease both}
-      `}</style>
-
-      <div className="lottie-anim lottie-box" key={phase} style={{ width: 280, height: 280, marginBottom: 24 }}>
-        {animData[phase] ? (
-          <Lottie animationData={animData[phase]} loop autoplay style={{ width: "100%", height: "100%" }} />
-        ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "4rem" }}>
-            {["\uD83C\uDF73", "\uD83C\uDF72", "\uD83C\uDF7D\uFE0F"][phase % 3]}
-          </div>
-        )}
-      </div>
-
-      <p
-        className="cook-msg"
-        key={`msg-${phase}`}
-        style={{
-          fontFamily: "'Playfair Display',serif",
-          fontSize: "1.2rem",
-          fontStyle: "italic",
-          color: "rgba(255,255,255,.7)",
-          textAlign: "center",
-        }}
-      >
-        {messages[phase]}
-      </p>
-
-      <div className="progress-bar" style={{ marginTop: 24, width: 200, height: 4, background: "rgba(255,255,255,.1)", borderRadius: 2, overflow: "hidden" }}>
-        <div
-          style={{
-            height: "100%",
-            background: "linear-gradient(90deg,#C45D2C,#E8975B)",
-            borderRadius: 2,
-            transition: `width ${totalDuration / 1000}s linear`,
-            width: animData.length > 0 ? "100%" : "0%",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
 // ========== MAIN APP ==========
 export default function App() {
-  // Flow: "splash" -> "itinerary" -> "cooking" -> "kitchen"
-  const [page, setPage] = useState<"splash" | "itinerary" | "cooking" | "kitchen">("splash");
-  const [splashPhase, setSplashPhase] = useState(0);
-  const [itRevealed, setItRevealed] = useState(false);
-
   // Kitchen state
   const [activeCategory, setActiveCategory] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  // Cart state
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [orderStep, setOrderStep] = useState<OrderStep>("cart");
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", email: "", type: "pickup", address: "", notes: "" });
+  const [paymentMethod, setPaymentMethod] = useState<"zelle" | "cashapp" | "paypal" | "">("");
+  const [submitting, setSubmitting] = useState(false);
+  const [addedItem, setAddedItem] = useState<string | null>(null);
 
-  // Show welcome toast when kitchen page loads
-  useEffect(() => {
-    if (page !== "kitchen") return;
-    setShowWelcome(true);
-    const t = setTimeout(() => setShowWelcome(false), 5000);
-    return () => clearTimeout(t);
-  }, [page]);
+  const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
+
+  const addToCart = (name: string, priceStr: string, category: string) => {
+    const price = parseFloat(priceStr.replace(/[^0-9.]/g, ""));
+    if (isNaN(price)) return;
+    setCart((prev) => {
+      const existing = prev.find((i) => i.name === name);
+      if (existing) return prev.map((i) => i.name === name ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { name, price, qty: 1, category }];
+    });
+    setAddedItem(name);
+    setTimeout(() => setAddedItem(null), 1800);
+  };
+
+  const updateQty = (name: string, delta: number) => {
+    setCart((prev) =>
+      prev.map((i) => i.name === name ? { ...i, qty: Math.max(0, i.qty + delta) } : i)
+        .filter((i) => i.qty > 0)
+    );
+  };
+
+  const placeOrder = async () => {
+    if (!paymentMethod) return;
+    setSubmitting(true);
+    const itemsList = cart.map((i) => `${i.name} x${i.qty} — $${(i.price * i.qty).toFixed(2)}`).join("\n");
+    const templateParams = {
+      customer_name: orderForm.name,
+      customer_phone: orderForm.phone,
+      customer_email: orderForm.email,
+      to_email: orderForm.email,
+      order_type: orderForm.type,
+      address: orderForm.type === "delivery" ? orderForm.address : "Pickup",
+      notes: orderForm.notes || "None",
+      items: itemsList,
+      total: `$${cartTotal.toFixed(2)}`,
+      payment_method: paymentMethod.toUpperCase(),
+    };
+    try {
+      await emailjs.send("service_dwjsco3", "template_gv3zm3q", templateParams, "pt06Sr7QUm3gPoyig");
+      if (orderForm.email) {
+        await emailjs.send("service_dwjsco3", "template_hvxotu8", templateParams, "pt06Sr7QUm3gPoyig");
+      }
+    } catch (_) { /* order still shows confirmation even if email fails */ }
+    setOrderStep("done");
+    setSubmitting(false);
+  };
 
   useEffect(() => {
-    if (page !== "splash") return;
-    const timers = [
-      setTimeout(() => setSplashPhase(1), 600),
-      setTimeout(() => setSplashPhase(2), 2200),
-      setTimeout(() => setSplashPhase(3), 3800),
-      setTimeout(() => setSplashPhase(4), 5400),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, [page]);
-
-  useEffect(() => {
-    if (page !== "kitchen") return;
     const handler = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
-  }, [page]);
+  }, []);
 
   const scrollTo = (id: string) => {
     setMenuOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const mapped: Record<string, string> = { contact: "order" };
+    document.getElementById(mapped[id] ?? id)?.scrollIntoView({ behavior: "smooth" });
   };
-
-  // ========== SPLASH ==========
-  if (page === "splash")
-    return (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          background: "linear-gradient(135deg,#0a0a0a,#1a1a1a 40%,#111 100%)",
-          overflow: "hidden",
-        }}
-      >
-        <style>{`
-          @keyframes sg{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
-          .sl{opacity:0;transform:translateY(30px);transition:all 1.2s cubic-bezier(.22,1,.36,1)}
-          .sl.v{opacity:1;transform:translateY(0)}
-          .sb{opacity:0;transform:translateY(20px);transition:all .8s ease;cursor:pointer;border:none;outline:none;
-            background:rgba(196,93,44,.15);color:#E8975B;padding:14px 40px;border-radius:50px;font-size:.9rem;
-            font-weight:600;letter-spacing:.1em;font-family:'DM Sans',sans-serif;border:1px solid rgba(196,93,44,.3)}
-          .sb.v{opacity:1;transform:translateY(0)}
-          .sb:hover{background:rgba(196,93,44,.3);transform:translateY(-2px)!important;box-shadow:0 8px 30px rgba(196,93,44,.2)}
-          @keyframes cfall{
-            0%{transform:translateY(-10vh) rotate(0deg);opacity:1}
-            80%{opacity:0.8}
-            100%{transform:translateY(105vh) rotate(720deg);opacity:0}
-          }
-          @keyframes brise{
-            0%{transform:translateY(0) scale(0.3);opacity:0}
-            10%{opacity:1;transform:translateY(-20vh) scale(1)}
-            90%{opacity:0.8}
-            100%{transform:translateY(-120vh) scale(1);opacity:0}
-          }
-        `}</style>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "radial-gradient(circle at 30% 40%,rgba(196,93,44,.08),transparent 50%),radial-gradient(circle at 70% 70%,rgba(232,151,91,.06),transparent 50%)",
-            animation: "sg 8s ease infinite",
-          }}
-        />
-        {/* Confetti */}
-        {[...Array(60)].map((_, i) => {
-          const colors = ["#E8975B", "#C45D2C", "#FFD700", "#FF6B6B", "#4ECDC4", "#FFE66D", "#FF8C94", "#A8E6CF", "#fff"];
-          const color = colors[i % colors.length];
-          const left = Math.random() * 100;
-          const delay = Math.random() * 5;
-          const duration = 3 + Math.random() * 4;
-          const size = 6 + Math.random() * 8;
-          const isCircle = i % 3 === 0;
-          return (
-            <div
-              key={`c-${i}`}
-              style={{
-                position: "absolute",
-                top: -20,
-                left: `${left}%`,
-                width: isCircle ? size : size * 0.5,
-                height: isCircle ? size : size * 1.3,
-                borderRadius: isCircle ? "50%" : 2,
-                background: color,
-                animation: `cfall ${duration}s ${delay}s linear infinite`,
-              }}
-            />
-          );
-        })}
-        {/* Balloons */}
-        {[...Array(10)].map((_, i) => {
-          const balloons = ["\uD83C\uDF88", "\uD83C\uDF89", "\uD83C\uDF8A"];
-          const left = 5 + (i / 10) * 90;
-          const delay = i * 0.5;
-          const duration = 5 + Math.random() * 4;
-          return (
-            <div
-              key={`b-${i}`}
-              style={{
-                position: "absolute",
-                bottom: -60,
-                left: `${left}%`,
-                fontSize: `${2.2 + Math.random() * 1.5}rem`,
-                animation: `brise ${duration}s ${delay}s linear infinite`,
-              }}
-            >
-              {balloons[i % balloons.length]}
-            </div>
-          );
-        })}
-        <div className="splash-inner" style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 32px", maxWidth: 600 }}>
-          <div
-            className={`sl ${splashPhase >= 1 ? "v" : ""}`}
-            style={{
-              fontSize: ".75rem",
-              fontWeight: 700,
-              letterSpacing: ".25em",
-              textTransform: "uppercase",
-              color: "rgba(196,93,44,.8)",
-              marginBottom: 24,
-              fontFamily: "'DM Sans',sans-serif",
-            }}
-          >
-            February 12, 2025 &mdash; April 5, 2026
-          </div>
-          <h1
-            className={`sl splash-title ${splashPhase >= 1 ? "v" : ""}`}
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "3.2rem",
-              fontWeight: 800,
-              color: "white",
-              lineHeight: 1.1,
-              marginBottom: 8,
-              transitionDelay: splashPhase >= 1 ? ".3s" : "0s",
-            }}
-          >
-            Happy 1 Year,
-          </h1>
-          <h1
-            className={`sl splash-name ${splashPhase >= 2 ? "v" : ""}`}
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "4rem",
-              fontWeight: 800,
-              color: "#E8975B",
-              lineHeight: 1.1,
-              fontStyle: "italic",
-            }}
-          >
-            Steph
-          </h1>
-          <div
-            style={{
-              width: splashPhase >= 2 ? 200 : 0,
-              height: 1,
-              background: "linear-gradient(90deg,transparent,rgba(196,93,44,.6),transparent)",
-              transition: "width 1.5s cubic-bezier(.22,1,.36,1)",
-              margin: "24px auto",
-            }}
-          />
-          <p
-            className={`sl splash-text ${splashPhase >= 3 ? "v" : ""}`}
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "1.1rem",
-              fontStyle: "italic",
-              color: "rgba(255,255,255,.7)",
-              lineHeight: 1.8,
-              maxWidth: 440,
-              margin: "0 auto",
-            }}
-          >
-            One year of love, laughter, and unforgettable moments.
-            <br />I planned something special for us today.
-          </p>
-          <div style={{ marginTop: 40 }}>
-            <button className={`sb splash-btn ${splashPhase >= 4 ? "v" : ""}`} onClick={() => setPage("itinerary")}>
-              See What&rsquo;s In Store &#10024;
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-
-  // ========== ITINERARY ==========
-  if (page === "itinerary")
-    return (
-      <div
-        style={{
-          fontFamily: "'DM Sans',sans-serif",
-          minHeight: "100vh",
-          background: "linear-gradient(135deg,#0a0a0a,#1a1a1a 40%,#111 100%)",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 20px",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <style>{`
-          @keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-          @keyframes pu{0%,100%{opacity:.3}50%{opacity:.6}}
-          .ii{animation:fu .6s ease both;opacity:0;cursor:default}
-          .ii:nth-child(1){animation-delay:.2s}.ii:nth-child(2){animation-delay:.4s}
-          .ii:nth-child(3){animation-delay:.6s}.ii:nth-child(4){animation-delay:.8s}
-          .ii.clickable{cursor:pointer;transition:transform .2s,box-shadow .2s}
-          .ii.clickable:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(196,93,44,.2)}
-          .rb{cursor:pointer;border:none;outline:none;background:rgba(196,93,44,.2);color:#E8975B;
-            padding:16px 44px;border-radius:50px;font-size:1rem;font-weight:600;letter-spacing:.08em;
-            font-family:'DM Sans',sans-serif;border:1px solid rgba(196,93,44,.4);transition:all .3s ease}
-          .rb:hover{background:rgba(196,93,44,.4);transform:translateY(-2px);box-shadow:0 8px 30px rgba(196,93,44,.2)}
-        `}</style>
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              borderRadius: "50%",
-              background: "rgba(232,151,91,.3)",
-              animation: `pu 3s ease infinite ${Math.random() * 3}s`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${2 + Math.random() * 4}px`,
-              height: `${2 + Math.random() * 4}px`,
-            }}
-          />
-        ))}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 480, width: "100%", textAlign: "center" }}>
-          {!itRevealed ? (
-            <div>
-              <div
-                style={{
-                  fontSize: ".75rem",
-                  fontWeight: 700,
-                  letterSpacing: ".25em",
-                  textTransform: "uppercase",
-                  color: "rgba(196,93,44,.8)",
-                  marginBottom: 20,
-                }}
-              >
-                April 5, 2026
-              </div>
-              <h1 className="it-title" style={{ fontFamily: "'Playfair Display',serif", fontSize: "2.8rem", fontWeight: 800, lineHeight: 1.1, marginBottom: 8 }}>
-                Our Day,
-              </h1>
-              <h1
-                className="it-name"
-                style={{
-                  fontFamily: "'Playfair Display',serif",
-                  fontSize: "3.2rem",
-                  fontWeight: 800,
-                  color: "#E8975B",
-                  fontStyle: "italic",
-                  lineHeight: 1.1,
-                  marginBottom: 24,
-                }}
-              >
-                Steph
-              </h1>
-              <div
-                style={{
-                  width: 120,
-                  height: 1,
-                  background: "linear-gradient(90deg,transparent,rgba(196,93,44,.5),transparent)",
-                  margin: "0 auto 24px",
-                }}
-              />
-              <p
-                style={{
-                  fontFamily: "'Playfair Display',serif",
-                  fontSize: "1rem",
-                  fontStyle: "italic",
-                  color: "rgba(255,255,255,.6)",
-                  lineHeight: 1.7,
-                  marginBottom: 40,
-                }}
-              >
-                I planned something special for us today.
-                <br />
-                Tap below to see what&rsquo;s in store.
-              </p>
-              <button className="rb" onClick={() => setItRevealed(true)}>
-                Reveal Our Day &#10024;
-              </button>
-            </div>
-          ) : (
-            <div>
-              <div
-                style={{
-                  fontSize: ".75rem",
-                  fontWeight: 700,
-                  letterSpacing: ".25em",
-                  textTransform: "uppercase",
-                  color: "rgba(196,93,44,.8)",
-                  marginBottom: 16,
-                }}
-              >
-                April 5, 2026
-              </div>
-              <h2 className="it-subtitle" style={{ fontFamily: "'Playfair Display',serif", fontSize: "2rem", fontWeight: 700, marginBottom: 32 }}>
-                Our <span style={{ color: "#E8975B", fontStyle: "italic" }}>Itinerary</span>
-              </h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16, textAlign: "left" }}>
-                {ITINERARY.map((item, i) => (
-                  <div
-                    key={i}
-                    className={`ii it-item ${item.isGift ? "clickable" : ""}`}
-                    onClick={item.isGift ? () => setPage("cooking") : undefined}
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      alignItems: "flex-start",
-                      background: item.isGift ? "rgba(196,93,44,.12)" : "rgba(255,255,255,.05)",
-                      borderRadius: 16,
-                      padding: "20px",
-                      border: item.isGift ? "1px solid rgba(196,93,44,.3)" : "1px solid rgba(255,255,255,.06)",
-                    }}
-                  >
-                    <div style={{ fontSize: "1.6rem", lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{item.icon}</div>
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontSize: ".7rem",
-                          fontWeight: 700,
-                          letterSpacing: ".12em",
-                          color: "#E8975B",
-                          textTransform: "uppercase",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {item.time}
-                      </div>
-                      <div style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 2 }}>
-                        {item.title}{" "}
-                        {item.isGift && (
-                          <span
-                            style={{
-                              fontSize: ".7rem",
-                              color: "rgba(255,255,255,.4)",
-                              fontFamily: "'DM Sans',sans-serif",
-                              fontWeight: 400,
-                              fontStyle: "italic",
-                            }}
-                          >
-                            &mdash; tap to open
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: ".85rem", color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 32 }}>
-                <div
-                  style={{
-                    width: 80,
-                    height: 1,
-                    background: "linear-gradient(90deg,transparent,rgba(196,93,44,.4),transparent)",
-                    margin: "0 auto 16px",
-                  }}
-                />
-                <p style={{ fontSize: ".85rem", color: "rgba(255,255,255,.4)", fontStyle: "italic" }}>Happy anniversary, my love &#128155;</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-
-  // ========== COOKING ANIMATION ==========
-  if (page === "cooking")
-    return (
-      <CookingLoader
-        onDone={() => {
-          window.scrollTo(0, 0);
-          setPage("kitchen");
-        }}
-      />
-    );
 
   // ========== KITCHEN SITE ==========
   return (
@@ -764,6 +277,26 @@ export default function App() {
         .popular-badge{position:relative;z-index:1}
         .popular-badge::before{content:'';position:absolute;inset:-2px;background:#C45D2C;border-radius:999px;animation:pulse-ring 2s infinite;z-index:-1}
         .divider{height:2px;max-width:600px;margin:0 auto;background:linear-gradient(90deg,transparent,rgba(196,93,44,.35),transparent)}
+        @keyframes cart-in{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+        @keyframes sheet-in{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+        @keyframes added-pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+        @keyframes toast-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .cart-drawer{animation:cart-in .3s cubic-bezier(.22,1,.36,1) both}
+        .cart-sheet{animation:sheet-in .3s cubic-bezier(.22,1,.36,1) both}
+        .add-btn{transition:all .2s ease;cursor:pointer;border:none;outline:none}
+        .add-btn:hover{transform:scale(1.05)}
+        .add-btn.added{animation:added-pop .3s ease}
+        .qty-btn{cursor:pointer;border:none;outline:none;background:rgba(21,71,52,.08);color:#154734;width:28px;height:28px;border-radius:50%;font-size:1rem;font-weight:700;transition:background .2s}
+        .qty-btn:hover{background:rgba(21,71,52,.2)}
+        .pay-opt{cursor:pointer;border:2px solid rgba(21,71,52,.12);border-radius:14px;padding:16px 20px;transition:all .2s;background:white}
+        .pay-opt:hover{border-color:#C45D2C;background:#fff8f4}
+        .pay-opt.selected{border-color:#C45D2C;background:#fff3eb}
+        .cart-fab{position:fixed;bottom:28px;right:24px;z-index:150;cursor:pointer;border:none;outline:none;background:#154734;color:white;border-radius:50px;padding:14px 22px;font-size:.9rem;font-weight:700;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 6px 24px rgba(21,71,52,.35);transition:all .3s ease}
+        .cart-fab:hover{background:#1b5e45;transform:translateY(-2px);box-shadow:0 10px 32px rgba(21,71,52,.4)}
+        .form-input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(21,71,52,.15);font-size:.9rem;font-family:'DM Sans',sans-serif;color:#1a1a1a;background:white;outline:none;transition:border .2s;box-sizing:border-box}
+        .form-input:focus{border-color:#C45D2C}
+        @media(max-width:768px){.cart-drawer{display:none!important}.cart-sheet{display:flex!important}}
+        @media(min-width:769px){.cart-drawer{display:flex!important}.cart-sheet{display:none!important}}
         @media(max-width:768px){
           .hero-title{font-size:2.5rem!important}.section-title{font-size:2rem!important}
           .menu-grid{grid-template-columns:1fr!important}.about-grid{grid-template-columns:1fr!important;gap:28px!important}
@@ -790,6 +323,323 @@ export default function App() {
         }
       `}</style>
 
+      {/* ADDED TOAST */}
+      {addedItem && (
+        <div style={{ position:"fixed", bottom:90, right:24, zIndex:300, background:"#154734", color:"white", padding:"10px 18px", borderRadius:50, fontSize:".85rem", fontWeight:600, animation:"toast-in .3s ease both", boxShadow:"0 4px 16px rgba(21,71,52,.3)" }}>
+          ✓ {addedItem} added
+        </div>
+      )}
+
+      {/* FLOATING CART BUTTON */}
+      {cartCount > 0 && (
+        <button className="cart-fab" onClick={() => { setCartOpen(true); setOrderStep("cart"); }}>
+          <span>🛒</span>
+          <span>{cartCount} item{cartCount !== 1 ? "s" : ""}</span>
+          <span style={{ background:"#C45D2C", borderRadius:50, padding:"2px 10px", fontSize:".8rem" }}>${cartTotal.toFixed(2)}</span>
+        </button>
+      )}
+
+      {/* CART OVERLAY BACKDROP */}
+      {cartOpen && (
+        <div onClick={() => setCartOpen(false)} style={{ position:"fixed", inset:0, zIndex:199, background:"rgba(0,0,0,.4)", backdropFilter:"blur(4px)" }} />
+      )}
+
+      {/* CART DRAWER — desktop */}
+      {cartOpen && (
+        <div className="cart-drawer" style={{ position:"fixed", top:0, right:0, bottom:0, width:420, zIndex:200, background:"white", boxShadow:"-8px 0 40px rgba(0,0,0,.12)", flexDirection:"column", overflowY:"auto" }}>
+          {orderStep === "cart" && (
+            <>
+              <div style={{ padding:"24px 24px 16px", borderBottom:"1px solid rgba(21,71,52,.08)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.3rem", fontWeight:700, color:"#154734" }}>Your Order</div>
+                <button onClick={() => setCartOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.4rem", color:"#888" }}>✕</button>
+              </div>
+              {cart.length === 0 ? (
+                <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, color:"#aaa" }}>
+                  <div style={{ fontSize:"3rem", marginBottom:12 }}>🛒</div>
+                  <div style={{ fontWeight:600 }}>Your cart is empty</div>
+                  <div style={{ fontSize:".85rem", marginTop:6 }}>Add items from the menu</div>
+                </div>
+              ) : (
+                <div style={{ flex:1, padding:"16px 24px", display:"flex", flexDirection:"column", gap:12 }}>
+                  {cart.map((item) => (
+                    <div key={item.name} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 0", borderBottom:"1px solid rgba(21,71,52,.06)" }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:600, fontSize:".9rem", color:"#154734" }}>{item.name}</div>
+                        <div style={{ fontSize:".78rem", color:"#aaa" }}>${item.price.toFixed(2)} each</div>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <button className="qty-btn" onClick={() => updateQty(item.name, -1)}>−</button>
+                        <span style={{ fontWeight:700, fontSize:".95rem", minWidth:20, textAlign:"center" }}>{item.qty}</span>
+                        <button className="qty-btn" onClick={() => updateQty(item.name, 1)}>+</button>
+                      </div>
+                      <div style={{ fontWeight:700, color:"#C45D2C", minWidth:54, textAlign:"right" }}>${(item.price * item.qty).toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {cart.length > 0 && (
+                <div style={{ padding:"16px 24px 28px", borderTop:"1px solid rgba(21,71,52,.08)" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16, fontSize:"1rem", fontWeight:700 }}>
+                    <span>Total</span><span style={{ color:"#C45D2C" }}>${cartTotal.toFixed(2)}</span>
+                  </div>
+                  <button className="cta-btn" onClick={() => setOrderStep("form")} style={{ width:"100%", background:"#C45D2C", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700 }}>
+                    Continue to Order →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {orderStep === "form" && (
+            <>
+              <div style={{ padding:"24px 24px 16px", borderBottom:"1px solid rgba(21,71,52,.08)", display:"flex", alignItems:"center", gap:12 }}>
+                <button onClick={() => setOrderStep("cart")} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.2rem", color:"#888" }}>←</button>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.2rem", fontWeight:700, color:"#154734" }}>Your Details</div>
+              </div>
+              <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:14, flex:1, overflowY:"auto" }}>
+                <div>
+                  <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:6 }}>Full Name *</label>
+                  <input className="form-input" placeholder="Your name" value={orderForm.name} onChange={e => setOrderForm(f => ({...f, name: e.target.value}))} />
+                </div>
+                <div>
+                  <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:6 }}>Phone Number *</label>
+                  <input className="form-input" placeholder="Your phone number" value={orderForm.phone} onChange={e => setOrderForm(f => ({...f, phone: e.target.value}))} />
+                </div>
+                <div>
+                  <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:6 }}>Email <span style={{ color:"#aaa", fontWeight:400, textTransform:"none", letterSpacing:0 }}>(for order confirmation)</span></label>
+                  <input className="form-input" placeholder="your@email.com" type="email" value={orderForm.email} onChange={e => setOrderForm(f => ({...f, email: e.target.value}))} />
+                </div>
+                <div>
+                  <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:8 }}>Order Type *</label>
+                  <div style={{ display:"flex", gap:10 }}>
+                    {["pickup","delivery"].map(t => (
+                      <button key={t} onClick={() => setOrderForm(f => ({...f, type: t}))} style={{ flex:1, padding:"10px", borderRadius:10, border:`2px solid ${orderForm.type===t?"#C45D2C":"rgba(21,71,52,.15)"}`, background:orderForm.type===t?"#fff3eb":"white", fontWeight:600, fontSize:".88rem", color:orderForm.type===t?"#C45D2C":"#555", cursor:"pointer", textTransform:"capitalize" }}>
+                        {t === "pickup" ? "🏠 Pickup" : "🚗 Delivery"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {orderForm.type === "delivery" && (
+                  <div>
+                    <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:6 }}>Delivery Address *</label>
+                    <input className="form-input" placeholder="Full address" value={orderForm.address} onChange={e => setOrderForm(f => ({...f, address: e.target.value}))} />
+                  </div>
+                )}
+                <div>
+                  <label style={{ fontSize:".78rem", fontWeight:700, color:"#154734", letterSpacing:".06em", textTransform:"uppercase", display:"block", marginBottom:6 }}>Notes (optional)</label>
+                  <textarea className="form-input" placeholder="Allergies, special requests..." rows={3} value={orderForm.notes} onChange={e => setOrderForm(f => ({...f, notes: e.target.value}))} style={{ resize:"none" }} />
+                </div>
+              </div>
+              <div style={{ padding:"16px 24px 28px", borderTop:"1px solid rgba(21,71,52,.08)" }}>
+                <button
+                  className="cta-btn"
+                  onClick={() => { if (orderForm.name && orderForm.phone && (orderForm.type==="pickup" || orderForm.address)) setOrderStep("payment"); }}
+                  style={{ width:"100%", background: orderForm.name && orderForm.phone ? "#C45D2C" : "#ccc", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700, cursor: orderForm.name && orderForm.phone ? "pointer" : "not-allowed" }}
+                >
+                  Choose Payment →
+                </button>
+              </div>
+            </>
+          )}
+
+          {orderStep === "payment" && (
+            <>
+              <div style={{ padding:"24px 24px 16px", borderBottom:"1px solid rgba(21,71,52,.08)", display:"flex", alignItems:"center", gap:12 }}>
+                <button onClick={() => setOrderStep("form")} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.2rem", color:"#888" }}>←</button>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.2rem", fontWeight:700, color:"#154734" }}>Payment</div>
+              </div>
+              <div style={{ padding:"20px 24px", flex:1, overflowY:"auto" }}>
+                <div style={{ background:"rgba(21,71,52,.04)", borderRadius:12, padding:"14px 16px", marginBottom:20 }}>
+                  <div style={{ fontSize:".78rem", color:"#888", fontWeight:600, marginBottom:4 }}>ORDER TOTAL</div>
+                  <div style={{ fontSize:"1.5rem", fontWeight:800, color:"#C45D2C" }}>${cartTotal.toFixed(2)}</div>
+                </div>
+                <div style={{ fontSize:".82rem", color:"#666", marginBottom:16, lineHeight:1.6 }}>
+                  Select your payment method below. After placing your order, you'll receive the exact payment details and handle to send the money to. Your order is confirmed once payment is received.
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {([
+                    { id:"zelle", label:"Zelle", icon:"💚", desc:"Send to phone number" },
+                    { id:"cashapp", label:"CashApp", icon:"💵", desc:"$ArrmarrsKitchen1" },
+                    { id:"paypal", label:"PayPal", icon:"🔵", desc:"Send to PayPal email" },
+                  ] as const).map(opt => (
+                    <div key={opt.id} className={`pay-opt ${paymentMethod===opt.id?"selected":""}`} onClick={() => setPaymentMethod(opt.id)} style={{ display:"flex", alignItems:"center", gap:14 }}>
+                      <span style={{ fontSize:"1.5rem" }}>{opt.icon}</span>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:700, fontSize:".95rem", color:"#154734" }}>{opt.label}</div>
+                        <div style={{ fontSize:".78rem", color:"#888" }}>{opt.desc}</div>
+                      </div>
+                      <div style={{ width:20, height:20, borderRadius:"50%", border:`2px solid ${paymentMethod===opt.id?"#C45D2C":"rgba(21,71,52,.2)"}`, background:paymentMethod===opt.id?"#C45D2C":"white", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        {paymentMethod===opt.id && <div style={{ width:8, height:8, borderRadius:"50%", background:"white" }} />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ padding:"16px 24px 28px", borderTop:"1px solid rgba(21,71,52,.08)" }}>
+                <button
+                  className="cta-btn"
+                  onClick={placeOrder}
+                  disabled={!paymentMethod || submitting}
+                  style={{ width:"100%", background: paymentMethod ? "#C45D2C" : "#ccc", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700, cursor: paymentMethod ? "pointer" : "not-allowed" }}
+                >
+                  {submitting ? "Placing Order…" : "Place Order ✓"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {orderStep === "done" && (
+            <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 28px", textAlign:"center" }}>
+              <div style={{ fontSize:"3.5rem", marginBottom:16 }}>🎉</div>
+              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.4rem", fontWeight:700, color:"#154734", marginBottom:10 }}>Order Placed!</div>
+              <div style={{ fontSize:".9rem", color:"#666", lineHeight:1.7, marginBottom:24 }}>
+                Thank you, <strong>{orderForm.name}</strong>! Your order is pending payment.
+              </div>
+              <div style={{ background:"#fff3eb", borderRadius:14, padding:"18px 20px", width:"100%", marginBottom:20, textAlign:"left" }}>
+                <div style={{ fontSize:".75rem", fontWeight:700, letterSpacing:".1em", color:"#C45D2C", textTransform:"uppercase", marginBottom:10 }}>Send ${cartTotal.toFixed(2)} via {paymentMethod?.toUpperCase()}</div>
+                {paymentMethod === "zelle" && <div style={{ fontWeight:700, color:"#154734", fontSize:".95rem" }}>📱 9803332822</div>}
+                {paymentMethod === "cashapp" && (
+                  <div>
+                    <a href="https://cash.app/$ArrmarrsKitchen1" target="_blank" rel="noopener noreferrer" style={{ fontWeight:700, color:"#154734", fontSize:".95rem", textDecoration:"none", display:"block", marginBottom:10 }}>💵 $ArrmarrsKitchen1 →</a>
+                    <img src="/images/cashapp.jpg" alt="CashApp QR" style={{ width:120, height:120, borderRadius:10, objectFit:"cover", display:"block" }} />
+                  </div>
+                )}
+                {paymentMethod === "paypal" && <div style={{ fontWeight:700, color:"#154734", fontSize:".95rem" }}>🔵 arrmarrskitchen@gmail.com</div>}
+                <div style={{ fontSize:".78rem", color:"#888", marginTop:8 }}>Include your name in the payment note. We'll confirm once received!</div>
+              </div>
+              <div style={{ background:"rgba(21,71,52,.06)", borderRadius:10, padding:"10px 14px", width:"100%", marginBottom:8 }}>
+                <div style={{ fontSize:".75rem", color:"#666", lineHeight:1.6 }}>📧 <strong>Confirmation email sent!</strong> If you don't see it, check your <strong>spam/junk folder</strong> and mark it as "Not Spam".</div>
+              </div>
+              <button className="cta-btn" onClick={() => { setCart([]); setCartOpen(false); setOrderStep("cart"); setOrderForm({ name:"", phone:"", email:"", type:"pickup", address:"", notes:"" }); setPaymentMethod(""); }} style={{ background:"#154734", color:"white", padding:"12px 28px", borderRadius:50, fontSize:".9rem", fontWeight:600, cursor:"pointer" }}>
+                Done
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CART BOTTOM SHEET — mobile */}
+      {cartOpen && (
+        <div className="cart-sheet" style={{ position:"fixed", left:0, right:0, bottom:0, zIndex:200, background:"white", borderRadius:"20px 20px 0 0", boxShadow:"0 -8px 40px rgba(0,0,0,.15)", flexDirection:"column", maxHeight:"90vh", overflowY:"auto" }}>
+          {orderStep === "cart" && (
+            <>
+              <div style={{ padding:"16px 20px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(21,71,52,.08)" }}>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.2rem", fontWeight:700, color:"#154734" }}>Your Order</div>
+                <button onClick={() => setCartOpen(false)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.3rem", color:"#888" }}>✕</button>
+              </div>
+              {cart.length === 0 ? (
+                <div style={{ padding:40, textAlign:"center", color:"#aaa" }}>
+                  <div style={{ fontSize:"2.5rem", marginBottom:8 }}>🛒</div>
+                  <div style={{ fontWeight:600 }}>Your cart is empty</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ padding:"12px 20px", display:"flex", flexDirection:"column", gap:10 }}>
+                    {cart.map((item) => (
+                      <div key={item.name} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid rgba(21,71,52,.06)" }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontWeight:600, fontSize:".88rem", color:"#154734" }}>{item.name}</div>
+                          <div style={{ fontSize:".75rem", color:"#aaa" }}>${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                          <button className="qty-btn" onClick={() => updateQty(item.name, -1)}>−</button>
+                          <span style={{ fontWeight:700, minWidth:18, textAlign:"center" }}>{item.qty}</span>
+                          <button className="qty-btn" onClick={() => updateQty(item.name, 1)}>+</button>
+                        </div>
+                        <div style={{ fontWeight:700, color:"#C45D2C", minWidth:50, textAlign:"right", fontSize:".9rem" }}>${(item.price * item.qty).toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding:"12px 20px 28px", borderTop:"1px solid rgba(21,71,52,.08)" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, fontWeight:700, fontSize:"1rem" }}>
+                      <span>Total</span><span style={{ color:"#C45D2C" }}>${cartTotal.toFixed(2)}</span>
+                    </div>
+                    <button className="cta-btn" onClick={() => setOrderStep("form")} style={{ width:"100%", background:"#C45D2C", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700 }}>
+                      Continue →
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          {orderStep === "form" && (
+            <>
+              <div style={{ padding:"16px 20px 12px", borderBottom:"1px solid rgba(21,71,52,.08)", display:"flex", alignItems:"center", gap:10 }}>
+                <button onClick={() => setOrderStep("cart")} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.1rem", color:"#888" }}>←</button>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.1rem", fontWeight:700, color:"#154734" }}>Your Details</div>
+              </div>
+              <div style={{ padding:"16px 20px", display:"flex", flexDirection:"column", gap:12 }}>
+                <input className="form-input" placeholder="Full Name *" value={orderForm.name} onChange={e => setOrderForm(f => ({...f, name: e.target.value}))} />
+                <input className="form-input" placeholder="Phone Number *" value={orderForm.phone} onChange={e => setOrderForm(f => ({...f, phone: e.target.value}))} />
+                <input className="form-input" placeholder="Email (for order confirmation)" type="email" value={orderForm.email} onChange={e => setOrderForm(f => ({...f, email: e.target.value}))} />
+                <div style={{ display:"flex", gap:8 }}>
+                  {["pickup","delivery"].map(t => (
+                    <button key={t} onClick={() => setOrderForm(f => ({...f, type: t}))} style={{ flex:1, padding:"10px", borderRadius:10, border:`2px solid ${orderForm.type===t?"#C45D2C":"rgba(21,71,52,.15)"}`, background:orderForm.type===t?"#fff3eb":"white", fontWeight:600, fontSize:".85rem", color:orderForm.type===t?"#C45D2C":"#555", cursor:"pointer", textTransform:"capitalize" }}>
+                      {t === "pickup" ? "🏠 Pickup" : "🚗 Delivery"}
+                    </button>
+                  ))}
+                </div>
+                {orderForm.type === "delivery" && (
+                  <input className="form-input" placeholder="Delivery Address *" value={orderForm.address} onChange={e => setOrderForm(f => ({...f, address: e.target.value}))} />
+                )}
+                <textarea className="form-input" placeholder="Notes (optional)" rows={2} value={orderForm.notes} onChange={e => setOrderForm(f => ({...f, notes: e.target.value}))} style={{ resize:"none" }} />
+                <button className="cta-btn" onClick={() => { if (orderForm.name && orderForm.phone) setOrderStep("payment"); }} style={{ width:"100%", background: orderForm.name && orderForm.phone ? "#C45D2C" : "#ccc", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700, marginBottom:12 }}>
+                  Choose Payment →
+                </button>
+              </div>
+            </>
+          )}
+          {orderStep === "payment" && (
+            <>
+              <div style={{ padding:"16px 20px 12px", borderBottom:"1px solid rgba(21,71,52,.08)", display:"flex", alignItems:"center", gap:10 }}>
+                <button onClick={() => setOrderStep("form")} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"1.1rem", color:"#888" }}>←</button>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.1rem", fontWeight:700, color:"#154734" }}>Payment — ${cartTotal.toFixed(2)}</div>
+              </div>
+              <div style={{ padding:"16px 20px", display:"flex", flexDirection:"column", gap:10 }}>
+                <div style={{ fontSize:".82rem", color:"#666", lineHeight:1.6, marginBottom:4 }}>Choose how you'll pay. You'll send the money after placing your order.</div>
+                {([
+                  { id:"zelle", label:"Zelle", icon:"💚", desc:"Send to phone number" },
+                  { id:"cashapp", label:"CashApp", icon:"💵", desc:"Send to $cashtag" },
+                  { id:"paypal", label:"PayPal", icon:"🔵", desc:"Send to PayPal email" },
+                ] as const).map(opt => (
+                  <div key={opt.id} className={`pay-opt ${paymentMethod===opt.id?"selected":""}`} onClick={() => setPaymentMethod(opt.id)} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <span style={{ fontSize:"1.3rem" }}>{opt.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:700, fontSize:".9rem", color:"#154734" }}>{opt.label}</div>
+                      <div style={{ fontSize:".75rem", color:"#888" }}>{opt.desc}</div>
+                    </div>
+                    <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${paymentMethod===opt.id?"#C45D2C":"rgba(21,71,52,.2)"}`, background:paymentMethod===opt.id?"#C45D2C":"white" }} />
+                  </div>
+                ))}
+                <button className="cta-btn" disabled={!paymentMethod || submitting} onClick={placeOrder} style={{ width:"100%", background: paymentMethod ? "#C45D2C" : "#ccc", color:"white", padding:"14px", borderRadius:50, fontSize:".95rem", fontWeight:700, marginTop:8, marginBottom:12 }}>
+                  {submitting ? "Placing Order…" : "Place Order ✓"}
+                </button>
+              </div>
+            </>
+          )}
+          {orderStep === "done" && (
+            <div style={{ padding:"32px 24px", textAlign:"center" }}>
+              <div style={{ fontSize:"3rem", marginBottom:12 }}>🎉</div>
+              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.3rem", fontWeight:700, color:"#154734", marginBottom:8 }}>Order Placed!</div>
+              <div style={{ fontSize:".88rem", color:"#666", lineHeight:1.7, marginBottom:20 }}>Thank you, <strong>{orderForm.name}</strong>! Send your payment to confirm.</div>
+              <div style={{ background:"#fff3eb", borderRadius:14, padding:"16px", marginBottom:20, textAlign:"left" }}>
+                <div style={{ fontSize:".72rem", fontWeight:700, color:"#C45D2C", textTransform:"uppercase", marginBottom:8 }}>Send ${cartTotal.toFixed(2)} via {paymentMethod?.toUpperCase()}</div>
+                {paymentMethod === "zelle" && <div style={{ fontWeight:700, color:"#154734" }}>📱 9803332822</div>}
+                {paymentMethod === "cashapp" && <div style={{ fontWeight:700, color:"#154734" }}>💵 $arrmarrskitchen</div>}
+                {paymentMethod === "paypal" && <div style={{ fontWeight:700, color:"#154734" }}>🔵 arrmarrskitchen@gmail.com</div>}
+                <div style={{ fontSize:".75rem", color:"#888", marginTop:6 }}>Include your name in the note!</div>
+                <div style={{ background:"rgba(21,71,52,.06)", borderRadius:10, padding:"10px 12px", marginTop:10 }}>
+                  <div style={{ fontSize:".75rem", color:"#666", lineHeight:1.6 }}>📧 <strong>Check your email!</strong> Confirmation may be in your <strong>spam folder</strong> — mark it "Not Spam".</div>
+                </div>
+              </div>
+              <button className="cta-btn" onClick={() => { setCart([]); setCartOpen(false); setOrderStep("cart"); setOrderForm({ name:"", phone:"", email:"", type:"pickup", address:"", notes:"" }); setPaymentMethod(""); }} style={{ background:"#154734", color:"white", padding:"12px 28px", borderRadius:50, fontSize:".9rem", fontWeight:600, cursor:"pointer" }}>
+                Done
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* NAV */}
       <nav
         className="nav-glass"
@@ -813,7 +663,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 26, alignItems: "center" }} className="hidden-mobile">
-            {["Menu", "Bulk Orders", "Reviews", "Gallery", "Order"].map((item) => (
+            {["Menu", "Bulk Orders", "Catering", "Reviews", "Gallery", "Contact"].map((item) => (
               <span
                 key={item}
                 onClick={() => scrollTo(item.toLowerCase().replace(/ /g, "-"))}
@@ -863,7 +713,7 @@ export default function App() {
         </div>
         {menuOpen && (
           <div style={{ padding: "18px 0 8px", display: "flex", flexDirection: "column", gap: 14 }}>
-            {["Menu", "Bulk Orders", "Reviews", "Gallery", "Order"].map((item) => (
+            {["Menu", "Bulk Orders", "Catering", "Reviews", "Gallery", "Contact"].map((item) => (
               <span
                 key={item}
                 onClick={() => scrollTo(item.toLowerCase().replace(/ /g, "-"))}
@@ -875,48 +725,6 @@ export default function App() {
           </div>
         )}
       </nav>
-
-      {/* WELCOME POPUP OVERLAY */}
-      {showWelcome && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,.5)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            animation: "welcome-in .6s ease both",
-          }}
-        >
-          <div
-            className="welcome-card"
-            style={{
-              background: "linear-gradient(135deg,#154734,#1b5e45)",
-              borderRadius: 20,
-              padding: "40px 48px",
-              textAlign: "center",
-              boxShadow: "0 20px 60px rgba(0,0,0,.4)",
-              border: "1px solid rgba(232,151,91,.2)",
-              maxWidth: 420,
-              width: "90%",
-            }}
-          >
-            <img src={FOOD_IMAGES.logo} alt="" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", marginBottom: 16 }} />
-            <div className="welcome-title" style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.6rem", fontWeight: 700, color: "white", marginBottom: 10 }}>
-              Welcome to ArrmarrsKitchen
-            </div>
-            <div style={{ width: 50, height: 2, background: "linear-gradient(90deg,#C45D2C,#E8975B)", borderRadius: 1, margin: "0 auto 14px" }} />
-            <div style={{ fontSize: ".95rem", color: "rgba(255,255,255,.65)", lineHeight: 1.7 }}>
-              Her official website &mdash; made with love.
-              <br />Explore the menu, place an order, and taste the warmth!
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* HERO */}
       <section
@@ -1006,10 +814,10 @@ export default function App() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(21,71,52,.3),transparent 50%)" }} />
             </div>
             <div style={{ borderRadius: 18, overflow: "hidden", background: "#1a1a1a" }}>
-              <img src={FOOD_IMAGES.menuChops} alt="Chops and rolls" style={{ width: "100%", height: "auto", display: "block" }} />
+              <img src={FOOD_IMAGES.menuChops} alt="Menu 1" style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
             <div style={{ borderRadius: 18, overflow: "hidden", background: "#1a1a1a" }}>
-              <img src={FOOD_IMAGES.menuSoups} alt="Nigerian soups" style={{ width: "100%", height: "auto", display: "block" }} />
+              <img src={FOOD_IMAGES.menuPlates} alt="Menu 2" style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
           </div>
         </div>
@@ -1106,7 +914,34 @@ export default function App() {
                   {item.name}
                 </h3>
                 <p style={{ fontSize: ".83rem", color: "#888", lineHeight: 1.5, marginBottom: 12 }}>{item.desc}</p>
-                <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#C45D2C" }}>{item.price}</div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#C45D2C" }}>{item.price}</div>
+                  {item.price.includes("/") ? (
+                    <div style={{ display:"flex", gap:6 }}>
+                      {["Small","Large"].map((size, si) => {
+                        const sizePrice = item.price.split("/")[si]?.trim() ?? item.price;
+                        return (
+                          <button
+                            key={size}
+                            className={`add-btn ${addedItem === item.name + size ? "added" : ""}`}
+                            onClick={() => { addToCart(`${item.name} (${size})`, sizePrice, MENU_DATA[activeCategory].category); setAddedItem(item.name + size); setTimeout(() => setAddedItem(null), 1800); }}
+                            style={{ background: addedItem===item.name+size ? "#154734" : si===0 ? "rgba(196,93,44,.15)" : "#C45D2C", color: si===0 && addedItem!==item.name+size ? "#C45D2C" : "white", padding:"6px 12px", borderRadius:50, fontSize:".72rem", fontWeight:700, border: si===0 ? "1px solid rgba(196,93,44,.3)" : "none" }}
+                          >
+                            {addedItem===item.name+size ? "✓" : `+ ${size}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <button
+                      className={`add-btn ${addedItem === item.name ? "added" : ""}`}
+                      onClick={() => addToCart(item.name, item.price, MENU_DATA[activeCategory].category)}
+                      style={{ background: addedItem===item.name ? "#154734" : "#C45D2C", color:"white", padding:"7px 16px", borderRadius:50, fontSize:".78rem", fontWeight:700 }}
+                    >
+                      {addedItem === item.name ? "✓ Added" : "+ Add"}
+                    </button>
+                  )}
+                </div>
               </div>
             </FadeIn>
           ))}
@@ -1166,11 +1001,101 @@ export default function App() {
                 }}
               >
                 <span style={{ fontFamily: "'Playfair Display',serif", fontWeight: 600, fontSize: "1rem", color: "#154734" }}>{item.name}</span>
-                <span style={{ fontWeight: 700, color: "#C45D2C", fontSize: ".95rem" }}>{item.price}</span>
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                  <span style={{ fontWeight: 700, color: "#C45D2C", fontSize: ".95rem" }}>{item.price}</span>
+                  <div style={{ display:"flex", gap:6 }}>
+                    {["Small","Large"].map((size, si) => {
+                      const sizePrice = item.price.split("/")[si]?.trim() ?? item.price;
+                      const key = item.name + size;
+                      return (
+                        <button
+                          key={size}
+                          className={`add-btn ${addedItem === key ? "added" : ""}`}
+                          onClick={() => { addToCart(`${item.name} (${size})`, sizePrice, "Bulk"); setAddedItem(key); setTimeout(() => setAddedItem(null), 1800); }}
+                          style={{ background: addedItem===key ? "#154734" : si===0 ? "rgba(21,71,52,.1)" : "#C45D2C", color: si===0 && addedItem!==key ? "#154734" : "white", padding:"6px 12px", borderRadius:50, fontSize:".72rem", fontWeight:700, border:"none", cursor:"pointer" }}
+                        >
+                          {addedItem===key ? "✓" : `+ ${size}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </FadeIn>
+      </section>
+      <div className="divider" />
+
+      {/* CATERING */}
+      <section id="catering" style={{ padding: "84px 24px", background: "linear-gradient(135deg,#154734,#1b5e45)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -60, right: -60, width: 300, height: 300, borderRadius: "50%", background: "rgba(196,93,44,.08)" }} />
+        <div style={{ position: "absolute", bottom: -40, left: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(232,151,91,.06)" }} />
+        <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ fontSize: ".78rem", fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#E8975B", marginBottom: 10 }}>
+                Catering & Bulk Orders
+              </div>
+              <h2 className="section-title" style={{ fontFamily: "'Playfair Display',serif", fontSize: "2.8rem", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
+                Feeding a Crowd? <span style={{ fontStyle: "italic", color: "#E8975B" }}>We've Got You.</span>
+              </h2>
+              <p style={{ fontSize: "1rem", color: "rgba(255,255,255,.65)", maxWidth: 520, margin: "16px auto 0", lineHeight: 1.8 }}>
+                From intimate gatherings to large events, we cater with the same love and quality you expect. Enquire today and let us take care of the food.
+              </p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12, marginBottom: 48 }}>
+              {["Jollof Rice", "Fried Rice", "Pepper Soup", "Jambala Pasta", "Jollof Spaghetti", "Egusi Soup", "Puff Puff", "And Many More…"].map((item) => (
+                <div
+                  key={item}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: 50,
+                    background: item === "And Many More…" ? "rgba(196,93,44,.2)" : "rgba(255,255,255,.08)",
+                    border: item === "And Many More…" ? "1px solid rgba(196,93,44,.4)" : "1px solid rgba(255,255,255,.12)",
+                    color: item === "And Many More…" ? "#E8975B" : "rgba(255,255,255,.85)",
+                    fontSize: ".85rem",
+                    fontWeight: 600,
+                    fontStyle: item === "And Many More…" ? "italic" : "normal",
+                  }}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.2}>
+            <div style={{ textAlign: "center" }}>
+              <a
+                href="https://www.instagram.com/arrmarrskitchen"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cta-btn"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 9,
+                  background: "#C45D2C",
+                  color: "white",
+                  padding: "15px 36px",
+                  borderRadius: 50,
+                  fontSize: ".95rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  marginBottom: 20,
+                }}
+              >
+                Enquire on Instagram
+              </a>
+              <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", fontSize: ".9rem", color: "rgba(255,255,255,.6)", fontWeight: 600 }}>
+                <span>&#128222; 9803332822</span>
+                <span>&#9993;&#65039; arrmarrskitchen@gmail.com</span>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
       </section>
       <div className="divider" />
 
@@ -1256,7 +1181,7 @@ export default function App() {
         </FadeIn>
         <FadeIn delay={0.1}>
           <div className="gallery-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
-            {[FOOD_IMAGES.menuPlates, FOOD_IMAGES.menuChops, FOOD_IMAGES.menuSoups].map((src, i) => (
+            {[FOOD_IMAGES.menuChops, FOOD_IMAGES.menuPlates, FOOD_IMAGES.menuSoups].map((src, i) => (
               <div key={i} className="gallery-img" style={{ borderRadius: 16, overflow: "hidden", background: "#1a1a1a" }}>
                 <img src={src} alt={`Food ${i + 1}`} style={{ width: "100%", display: "block" }} />
               </div>
@@ -1391,12 +1316,27 @@ export default function App() {
           >
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(circle at 28% 38%,rgba(196,93,44,.1),transparent 60%)" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ fontSize: ".75rem", fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(232,151,91,.7)", marginBottom: 14 }}>
+                Get in Touch
+              </div>
               <h2 className="order-heading" style={{ fontFamily: "'Playfair Display',serif", fontSize: "2.5rem", fontWeight: 700, color: "white", marginBottom: 12 }}>
-                Ready to <span style={{ fontStyle: "italic", color: "#E8975B" }}>Order?</span>
+                Questions or <span style={{ fontStyle: "italic", color: "#E8975B" }}>Custom Orders?</span>
               </h2>
-              <p style={{ fontSize: ".98rem", color: "rgba(255,255,255,.65)", maxWidth: 420, margin: "0 auto 26px", lineHeight: 1.7 }}>
-                DM us on Instagram or reach out directly.
+              <p style={{ fontSize: ".98rem", color: "rgba(255,255,255,.65)", maxWidth: 480, margin: "0 auto 28px", lineHeight: 1.8 }}>
+                For catering, special requests, or anything that needs a conversation — reach out directly. For regular orders, use the cart on the menu above.
               </p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", marginBottom: 28 }}>
+                {[
+                  { label: "🎉 Catering & Events", desc: "Large party orders & custom menus" },
+                  { label: "❓ Pre-order Questions", desc: "Delivery area, ingredients & more" },
+                  { label: "📦 Order Support", desc: "Changes, cancellations & confirmations" },
+                ].map(item => (
+                  <div key={item.label} style={{ background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, padding: "12px 18px", textAlign: "left", minWidth: 180, flex: "1 1 180px", maxWidth: 220 }}>
+                    <div style={{ fontWeight: 700, fontSize: ".85rem", color: "white", marginBottom: 4 }}>{item.label}</div>
+                    <div style={{ fontSize: ".75rem", color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>{item.desc}</div>
+                  </div>
+                ))}
+              </div>
               <a
                 href="https://www.instagram.com/arrmarrskitchen"
                 target="_blank"
@@ -1420,7 +1360,7 @@ export default function App() {
                 </svg>
                 DM on Instagram
               </a>
-              <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", fontSize: ".9rem", color: "rgba(255,255,255,.75)", fontWeight: 600, marginTop: 24 }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", fontSize: ".9rem", color: "rgba(255,255,255,.75)", fontWeight: 600, marginTop: 20 }}>
                 <span>&#128222; 9803332822</span>
                 <span>&#9993;&#65039; arrmarrskitchen@gmail.com</span>
               </div>
